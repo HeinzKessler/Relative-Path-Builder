@@ -6,5 +6,12 @@ With (optional) command line parameters, you can provide one or both paths at st
 
 When integrating into Microsoft Visual Studio as an External Tool, you can use "$(ProjectDir)" as a command line parameter.
 
+How to build:
+Written in C#, build with Visual Studio 2017
+
+How to install:
+Just copy RelativePathBuilder.exe and the RelativePathBuilder.exe.config somewhere, no installation required.
+.Net Runtime 4.5 or newer required
+
 2018-06-30 Heinz Kessler
 
