@@ -32,6 +32,8 @@ namespace RelativePathBuilder
                 break;
             }
 
+            labelResult12.Text = "1\u25ba2";    // "1 > 2"
+            labelResult21.Text = "2\u25ba1";    // "2 > 1"
         }
 
         private void comboSetTextFromCommandLine( ComboBox combo, string text )
@@ -47,7 +49,7 @@ namespace RelativePathBuilder
             // There seems to be a bug in TextBox ForeColor, if they are set to read only:
             // https://www.codeproject.com/Questions/359467/Change-forecolor-of-text-when-textbox-is-readonly
             // BackColor must be set once, only then it works
-            textBoxResult.BackColor = this.BackColor;
+            textBoxResult21.BackColor = textBoxResult12.BackColor = this.BackColor;
 
             labelVersion.Text = string.Format( labelVersion.Text, System.Reflection.Assembly.GetExecutingAssembly().GetName().Version );
 
@@ -72,17 +74,24 @@ namespace RelativePathBuilder
             CombosAddTextToMRUs();
         }
 
-        private void textBoxResult_TextChanged( object sender, EventArgs e )
+        private void textBoxResult12_TextChanged( object sender, EventArgs e )
         {
-            buttonCopy.Enabled = textBoxResult.Text.Length > 0;
+            buttonCopy21.Enabled = buttonCopy12.Enabled = textBoxResult12.Text.Length > 0;
         }
 
 
-        private void buttonCopy_Click( object sender, EventArgs e )
+        private void buttonCopy12_Click( object sender, EventArgs e )
         {
-            Clipboard.SetText( textBoxResult.Text );
+            Clipboard.SetText( textBoxResult12.Text );
             CombosAddTextToMRUs();
         }
+
+        private void buttonCopy21_Click( object sender, EventArgs e )
+        {
+            Clipboard.SetText( textBoxResult21.Text );
+            CombosAddTextToMRUs();
+        }
+
 
         private void comboSaveMRULists()
         {
@@ -107,28 +116,38 @@ namespace RelativePathBuilder
 
             if( path1 == "" || path2 == "" )
             {
-                textBoxResult.Text = "";
+                textBoxResult21.Text = textBoxResult12.Text = "";
                 return;
             }
 
-            var sb = new StringBuilder( MAX_PATH + 1 );
-            var success = NativeMethods.PathRelativePathTo( sb,
+            var sb12 = new StringBuilder( MAX_PATH + 1 );
+            var success = NativeMethods.PathRelativePathTo( sb12,
                                          path1,
                                          checkBoxIsFilename1.Checked ? 0u : FILE_ATTRIBUTE_DIRECTORY,
                                          path2,
                                          checkBoxIsFilename2.Checked ? 0u : FILE_ATTRIBUTE_DIRECTORY
                                         );
+
+            var sb21 = new StringBuilder( MAX_PATH + 1 );
+            NativeMethods.PathRelativePathTo( sb21,
+                                              path2,
+                                              checkBoxIsFilename2.Checked ? 0u : FILE_ATTRIBUTE_DIRECTORY,
+                                              path1,
+                                              checkBoxIsFilename1.Checked ? 0u : FILE_ATTRIBUTE_DIRECTORY
+                                            );
+
             if( success )
             {
-                textBoxResult.ForeColor = this.ForeColor;
-                textBoxResult.Text = sb.ToString();
-                buttonCopy.Enabled = textBoxResult.Text != "";
+                textBoxResult21.ForeColor = textBoxResult12.ForeColor = this.ForeColor;
+                textBoxResult12.Text = sb12.ToString();
+                textBoxResult21.Text = sb21.ToString();
+                buttonCopy21.Enabled = buttonCopy12.Enabled = textBoxResult12.Text != "";
             }
             else
             {
-                textBoxResult.ForeColor = Color.Red;
-                textBoxResult.Text = "** Cannot create relative path **";
-                buttonCopy.Enabled = false;
+                textBoxResult21.ForeColor = textBoxResult12.ForeColor = Color.Red;
+                textBoxResult21.Text = textBoxResult12.Text = "** Cannot create relative path **";
+                buttonCopy21.Enabled = buttonCopy12.Enabled = false;
             }
 
         }
@@ -152,19 +171,9 @@ namespace RelativePathBuilder
             comboBoxPath2.AddCurrentComboTextToMRU();
         }
 
-        private void buttonSwap_Click( object sender, EventArgs e )
-        {
-            var mru1 = comboBoxPath1.GetMRUList();
-            comboBoxPath1.SetMRUList( comboBoxPath2.GetMRUList() );
-            comboBoxPath2.SetMRUList( mru1 );
-
-            var c = checkBoxIsFilename1.Checked;
-            checkBoxIsFilename1.Checked = checkBoxIsFilename2.Checked;
-            checkBoxIsFilename2.Checked = c;
-        }
-
         private void linkLabel2_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e ) =>
             System.Diagnostics.Process.Start( "http://icons8.com" );
+
     }
 
     static class NativeMethods
